@@ -22,16 +22,18 @@ from collections import defaultdict
 
 # hack for python2/3 compatibility
 from io import open
+
 argparse.open = open
 
-class BPE(object):
 
+class BPE(object):
     def __init__(self, codes, separator='@@', vocab=None, glossaries=None):
 
         # check version information
         firstline = codes.readline()
         if firstline.startswith('#version:'):
-            self.version = tuple([int(x) for x in re.sub(r'(\.0+)*$','', firstline.split()[-1]).split(".")])
+            self.version = tuple(
+                [int(x) for x in re.sub(r'(\.0+)*$', '', firstline.split()[-1]).split(".")])
         else:
             self.version = (0, 1)
             codes.seek(0)
@@ -39,9 +41,11 @@ class BPE(object):
         self.bpe_codes = [tuple(item.split()) for item in codes]
 
         # some hacking to deal with duplicates (only consider first instance)
-        self.bpe_codes = dict([(code,i) for (i,code) in reversed(list(enumerate(self.bpe_codes)))])
+        self.bpe_codes = dict(
+            [(code, i) for (i, code) in reversed(list(enumerate(self.bpe_codes)))])
 
-        self.bpe_codes_reverse = dict([(pair[0] + pair[1], pair) for pair,i in self.bpe_codes.items()])
+        self.bpe_codes_reverse = dict(
+            [(pair[0] + pair[1], pair) for pair, i in self.bpe_codes.items()])
 
         self.separator = separator
 
@@ -72,8 +76,9 @@ class BPE(object):
         word_segments = [word]
         for gloss in self.glossaries:
             word_segments = [out_segments for segment in word_segments
-                                 for out_segments in isolate_glossary(segment, gloss)]
+                             for out_segments in isolate_glossary(segment, gloss)]
         return word_segments
+
 
 def create_parser():
     parser = argparse.ArgumentParser(
@@ -106,10 +111,11 @@ def create_parser():
     parser.add_argument(
         '--glossaries', type=str, nargs='+', default=None,
         metavar="STR",
-        help="Glossaries. The strings provided in glossaries will not be affected"+
+        help="Glossaries. The strings provided in glossaries will not be affected" +
              "by the BPE (i.e. they will neither be broken into subwords, nor concatenated with other subwords")
 
     return parser
+
 
 def get_pairs(word):
     """Return set of symbol pairs in a word.
@@ -123,7 +129,9 @@ def get_pairs(word):
         prev_char = char
     return pairs
 
-def encode(orig, bpe_codes, bpe_codes_reverse, vocab, separator, version, glossaries=None, cache={}):
+
+def encode(orig, bpe_codes, bpe_codes_reverse, vocab, separator, version, glossaries=None,
+           cache={}):
     """Encode word based on list of BPE merge operations, which are applied consecutively
     """
 
@@ -136,8 +144,8 @@ def encode(orig, bpe_codes, bpe_codes_reverse, vocab, separator, version, glossa
 
     if version == (0, 1):
         word = tuple(orig) + ('</w>',)
-    elif version == (0, 2): # more consistent handling of word-final segments
-        word = tuple(orig[:-1]) + ( orig[-1] + '</w>',)
+    elif version == (0, 2):  # more consistent handling of word-final segments
+        word = tuple(orig[:-1]) + (orig[-1] + '</w>',)
     else:
         raise NotImplementedError
 
@@ -147,7 +155,7 @@ def encode(orig, bpe_codes, bpe_codes_reverse, vocab, separator, version, glossa
         return orig
 
     while True:
-        bigram = min(pairs, key = lambda pair: bpe_codes.get(pair, float('inf')))
+        bigram = min(pairs, key=lambda pair: bpe_codes.get(pair, float('inf')))
         if bigram not in bpe_codes:
             break
         first, second = bigram
@@ -162,8 +170,8 @@ def encode(orig, bpe_codes, bpe_codes_reverse, vocab, separator, version, glossa
                 new_word.extend(word[i:])
                 break
 
-            if word[i] == first and i < len(word)-1 and word[i+1] == second:
-                new_word.append(first+second)
+            if word[i] == first and i < len(word) - 1 and word[i + 1] == second:
+                new_word.append(first + second)
                 i += 2
             else:
                 new_word.append(word[i])
@@ -179,13 +187,14 @@ def encode(orig, bpe_codes, bpe_codes_reverse, vocab, separator, version, glossa
     if word[-1] == '</w>':
         word = word[:-1]
     elif word[-1].endswith('</w>'):
-        word = word[:-1] + (word[-1].replace('</w>',''),)
+        word = word[:-1] + (word[-1].replace('</w>', ''),)
 
     if vocab:
         word = check_vocab_and_split(word, bpe_codes_reverse, vocab, separator)
 
     cache[orig] = word
     return word
+
 
 def recursive_split(segment, bpe_codes, vocab, separator, final=False):
     """Recursively split segment into smaller units (by reversing BPE merges)
@@ -198,7 +207,7 @@ def recursive_split(segment, bpe_codes, vocab, separator, final=False):
         else:
             left, right = bpe_codes[segment]
     except:
-        #sys.stderr.write('cannot split {0} further.\n'.format(segment))
+        # sys.stderr.write('cannot split {0} further.\n'.format(segment))
         yield segment
         return
 
@@ -214,6 +223,7 @@ def recursive_split(segment, bpe_codes, vocab, separator, final=False):
         for item in recursive_split(right, bpe_codes, vocab, separator, final):
             yield item
 
+
 def check_vocab_and_split(orig, bpe_codes, vocab, separator):
     """Check for each segment in word if it is in-vocabulary,
     and segment OOV segments into smaller units by reversing the BPE merge operations"""
@@ -224,7 +234,7 @@ def check_vocab_and_split(orig, bpe_codes, vocab, separator):
         if segment + separator in vocab:
             out.append(segment)
         else:
-            #sys.stderr.write('OOV: {0}\n'.format(segment))
+            # sys.stderr.write('OOV: {0}\n'.format(segment))
             for item in recursive_split(segment, bpe_codes, vocab, separator, False):
                 out.append(item)
 
@@ -232,7 +242,7 @@ def check_vocab_and_split(orig, bpe_codes, vocab, separator):
     if segment in vocab:
         out.append(segment)
     else:
-        #sys.stderr.write('OOV: {0}\n'.format(segment))
+        # sys.stderr.write('OOV: {0}\n'.format(segment))
         for item in recursive_split(segment, bpe_codes, vocab, separator, True):
             out.append(item)
 
@@ -253,6 +263,7 @@ def read_vocabulary(vocab_file, threshold):
 
     return vocabulary
 
+
 def isolate_glossary(word, glossary):
     """
     Isolate a glossary present inside a word.
@@ -266,8 +277,10 @@ def isolate_glossary(word, glossary):
         return [word]
     else:
         splits = word.split(glossary)
-        segments = [segment.strip() for split in splits[:-1] for segment in [split, glossary] if segment != '']
+        segments = [segment.strip() for split in splits[:-1] for segment in [split, glossary] if
+                    segment != '']
         return segments + [splits[-1].strip()] if splits[-1] != '' else segments
+
 
 if __name__ == '__main__':
 
