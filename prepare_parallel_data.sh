@@ -23,6 +23,8 @@ merge_sequences=0
 test_ratio=.2
 seed=42
 
+clear_tmp=0
+
 # Parse named args
 while [ "$#" -gt 0 ]; do
     case "$1" in
@@ -76,6 +78,10 @@ while [ "$#" -gt 0 ]; do
         --seed)
             seed=$2
             shift
+            shift
+            ;;
+        --clear_tmp)
+            clear_tmp=1
             shift
             ;;
         --)
@@ -146,8 +152,23 @@ if [ "$level" == "bpe" ];  then
         ${DIR}/get_vocab.py \
             --min_frequency ${vocab_min_freq} \
             --max_vocab_size ${vocab_max_size} >  ${data_dir}/vocab.txt
+elif [ "$level" == "char" ];  then
+    cat ${data_name}.L1.txt ${data_name}.L2.txt |\
+        ${DIR}/get_vocab.py \
+            --delimiter '' \
+            --min_frequency ${vocab_min_freq} \
+            --max_vocab_size ${vocab_max_size} >  ${data_dir}/vocab.txt
+    cp ${data_name}.L1.txt ${data_name}.sources.txt
+    cp ${data_name}.L2.txt ${data_name}.targets.txt
+elif [ "$level" == "word" ];  then
+    cat ${data_name}.L1.txt ${data_name}.L2.txt |\
+        ${DIR}/get_vocab.py \
+            --delimiter ' ' \
+            --min_frequency ${vocab_min_freq} \
+            --max_vocab_size ${vocab_max_size} >  ${data_dir}/vocab.txt
+    cp ${data_name}.L1.txt ${data_name}.sources.txt
+    cp ${data_name}.L2.txt ${data_name}.targets.txt
 else
-    # @TODO
     exit 1
 fi
 
@@ -170,3 +191,19 @@ cat ${data_dir}/targets.txt | \
     ${DIR}/train_test_split_stream.py --test_ratio ${test_ratio} --seed ${seed}
 mv train.txt ${data_dir}/train_targets.txt
 mv test.txt ${data_dir}/test_targets.txt
+
+if [ $clear_tmp ]; then
+    rm ${data_name}.L1.txt
+    rm ${data_name}.L2.txt
+
+    if [ "$level" == "bpe" ];  then
+        rm ${data_name}.L1.vocab.txt
+        rm ${data_name}.L2.vocab.txt
+    fi
+
+    rm ${data_name}.sources.txt
+    rm ${data_name}.targets.txt
+
+    rm ${data_dir}/sources.txt
+    rm ${data_dir}/targets.txt
+fi
