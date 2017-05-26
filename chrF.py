@@ -31,7 +31,7 @@ if sys.version_info < (3, 0):
 def create_parser():
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        description="learn BPE-based word segmentation")
+        description="Compute chrF3 for machine translation evaluation")
 
     parser.add_argument(
         '--ref', '-r', type=argparse.FileType('r'), required=True,
