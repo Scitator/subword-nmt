@@ -12,8 +12,11 @@ clear_punctuation=0
 lowercase=0
 
 level=bpe
+
 bpe_symbols=10000
 bpe_min_freq=2
+
+split_chars=0
 
 vocab_min_freq=2
 vocab_max_size=50000
@@ -54,6 +57,10 @@ while [ "$#" -gt 0 ]; do
         --bpe_min_freq)
             bpe_min_freq=$2
             shift
+            shift
+            ;;
+        --split_chars)
+            split_chars=1
             shift
             ;;
         --vocab_min_freq)
@@ -158,8 +165,18 @@ elif [ "$level" == "char" ];  then
             --delimiter '' \
             --min_frequency ${vocab_min_freq} \
             --max_vocab_size ${vocab_max_size} >  ${data_dir}/vocab.txt
-    cp ${data_name}.L1.txt ${data_name}.sources.txt
-    cp ${data_name}.L2.txt ${data_name}.targets.txt
+
+    if [ $split_chars ]; then
+        cat ${data_name}.L1.txt |\
+            ${DIR}/split_chars.py > ${data_name}.sources.txt
+        cat ${data_name}.L2.txt |\
+            ${DIR}/split_chars.py > ${data_name}.targets.txt
+        tmp_var=$'_#_\t1'
+        sed -i "1s/.*/$var/" ${data_dir}/vocab.txt
+    else
+        cp ${data_name}.L1.txt ${data_name}.sources.txt
+        cp ${data_name}.L2.txt ${data_name}.targets.txt
+    fi
 elif [ "$level" == "word" ];  then
     cat ${data_name}.L1.txt ${data_name}.L2.txt |\
         ${DIR}/get_vocab.py \
