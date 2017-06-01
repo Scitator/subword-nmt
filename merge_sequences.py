@@ -35,13 +35,26 @@ if __name__ == '__main__':
     # read/write files as UTF-8
     args.input = [codecs.open(f.name, encoding='UTF-8') for f in args.input]
     args.output = [codecs.open(f.name, 'w', encoding='UTF-8') for f in args.output]
+    assert len(args.input) == len(args.output)
 
-    sources, targets = args.input
-    for line_from, line_to in zip(sources, targets):
-        args.output[0].write(line_from)
-        args.output[0].write(line_to)
-        args.output[1].write(line_to)
-        args.output[1].write(line_from)
+    if len(args.input) == 2:
+        source, targets = args.input
+        for line_from, line_to in zip(args.input):
+            args.output[0].write(line_from)
+            args.output[0].write(line_to)
+            args.output[1].write(line_to)
+            args.output[1].write(line_from)
+    elif len(args.input) == 3:
+        source, targets, labels = args.input
+        for line_from, line_to, label in zip(args.input):
+            args.output[0].write(line_from)
+            args.output[0].write(line_to)
+            args.output[1].write(line_to)
+            args.output[1].write(line_from)
+            args.output[2].write(label)
+            args.output[2].write(label)
+    else:
+        raise NotImplemented
 
     args.input = [f.close() for f in args.input]
     args.output = [f.close() for f in args.output]
