@@ -136,6 +136,8 @@ else
         awk -F '\t' '{print $2}' > ${data_name}.L2.txt
 fi
 
+cat ${data} | awk -F '\t' '{print $3}' > ${data_name}.labels.txt
+
 if [ "$level" == "bpe" ];  then
     ${DIR}/learn_joint_bpe_and_vocab.py \
         --input ${data_name}.L1.txt ${data_name}.L2.txt \
@@ -192,11 +194,12 @@ fi
 
 if [ $merge_sequences ]; then
     ${DIR}/merge_sequences.py \
-        --input ${data_name}.sources.txt ${data_name}.targets.txt \
-        --output ${data_dir}/sources.txt ${data_dir}/targets.txt
+        --input ${data_name}.sources.txt ${data_name}.targets.txt ${data_name}.labels.txt \
+        --output ${data_dir}/sources.txt ${data_dir}/targets.txt ${data_dir}/labels.txt
 else
     cp ${data_name}.sources.txt ${data_dir}/sources.txt
     cp ${data_name}.targets.txt ${data_dir}/targets.txt
+    cp ${data_name}.labels.txt ${data_dir}/labels.txt
 fi
 
 cat ${data_dir}/sources.txt | \
@@ -208,6 +211,11 @@ cat ${data_dir}/targets.txt | \
     ${DIR}/train_test_split_stream.py --test_ratio ${test_ratio} --seed ${seed}
 mv train.txt ${data_dir}/train_targets.txt
 mv test.txt ${data_dir}/test_targets.txt
+
+cat ${data_dir}/labels.txt | \
+    ${DIR}/train_test_split_stream.py --test_ratio ${test_ratio} --seed ${seed}
+mv train.txt ${data_dir}/train_labels.txt
+mv test.txt ${data_dir}/test_labels.txt
 
 if [ $clear_tmp ]; then
     rm ${data_name}.L1.txt

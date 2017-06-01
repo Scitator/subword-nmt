@@ -4,7 +4,7 @@
 import sys
 import argparse
 
-from itertools import islice
+import numpy as np
 from sklearn.model_selection import train_test_split
 
 
@@ -37,7 +37,7 @@ if __name__ == '__main__':
     parser = create_parser()
     args = parser.parse_args()
 
-    outputs = ["train.txt", "test.txt"]
+    outputs = ["train.txt", "test.txt", "index.txt"]
     outputs = [open(f, 'w') for f in outputs]
 
     lines = []
@@ -45,16 +45,25 @@ if __name__ == '__main__':
     for line in sys.stdin:
         lines.append(line)
         if len(lines) > args.batch_size:
-            train_lines, test_lines = train_test_split(
-                lines, test_size=args.test_ratio,
+            idx = np.arange(len(lines))
+            train_index, test_index = train_test_split(
+                idx, test_size=args.test_ratio,
                 random_state=args.seed)
+            train_lines = [lines[i] for i in train_index]
+            test_lines = [lines[i] for i in test_index]
             outputs[0].writelines(train_lines)
             outputs[1].writelines(test_lines)
+            outputs[2].writelines(list(map(str, idx)))
             lines = []
 
-    train_lines, test_lines = train_test_split(
-        lines, test_size=args.test_ratio, random_state=args.seed)
+    idx = np.arange(len(lines))
+    train_index, test_index = train_test_split(
+        idx, test_size=args.test_ratio,
+        random_state=args.seed)
+    train_lines = [lines[i] for i in train_index]
+    test_lines = [lines[i] for i in test_index]
     outputs[0].writelines(train_lines)
     outputs[1].writelines(test_lines)
+    outputs[2].writelines(list(map(str, idx)))
 
     outputs = [f.close() for f in outputs]
