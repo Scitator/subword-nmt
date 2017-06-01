@@ -39,14 +39,14 @@ if __name__ == '__main__':
 
     if len(args.input) == 2:
         source, targets = args.input
-        for line_from, line_to in zip(args.input):
+        for line_from, line_to in zip(source, targets):
             args.output[0].write(line_from)
             args.output[0].write(line_to)
             args.output[1].write(line_to)
             args.output[1].write(line_from)
     elif len(args.input) == 3:
         source, targets, labels = args.input
-        for line_from, line_to, label in zip(args.input):
+        for line_from, line_to, label in zip(source, targets, labels):
             args.output[0].write(line_from)
             args.output[0].write(line_to)
             args.output[1].write(line_to)
