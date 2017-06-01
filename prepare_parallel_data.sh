@@ -172,7 +172,7 @@ elif [ "$level" == "char" ];  then
         cat ${data_name}.L2.txt |\
             ${DIR}/split_chars.py > ${data_name}.targets.txt
         tmp_var=$'_#_\t1'
-        sed -i "1s/.*/$var/" ${data_dir}/vocab.txt
+        sed -i "1s/.*/$tmp_var/" ${data_dir}/vocab.txt
     else
         cp ${data_name}.L1.txt ${data_name}.sources.txt
         cp ${data_name}.L2.txt ${data_name}.targets.txt
