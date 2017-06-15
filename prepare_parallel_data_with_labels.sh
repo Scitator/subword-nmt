@@ -25,6 +25,7 @@ merge_sequences=0
 
 test_ratio=.2
 seed=42
+test_data=
 
 clear_tmp=0
 
@@ -87,6 +88,11 @@ while [ "$#" -gt 0 ]; do
             shift
             shift
             ;;
+        --test_data)
+            test_data=$2
+            shift
+            shift
+            ;;
         --clear_tmp)
             clear_tmp=1
             shift
@@ -115,6 +121,17 @@ if [ $clear_punctuation ] && [ $lowercase ]; then
         awk -F '\t' '{print $2}' | \
         ${DIR}/clear_punctuation.py | \
         ${DIR}/lowercase.py > ${data_name}.L2.txt
+
+    if [ ${test_data} ]; then
+        cat ${test_data} |\
+            awk -F '\t' '{print $1}' |\
+            ${DIR}/clear_punctuation.py | \
+            ${DIR}/lowercase.py > ${data_name}.L1.test.txt
+        cat ${test_data} | \
+            awk -F '\t' '{print $2}' | \
+            ${DIR}/clear_punctuation.py | \
+            ${DIR}/lowercase.py > ${data_name}.L2.test.txt
+    fi
 elif [ $clear_punctuation ]; then
     cat ${data} |\
         awk -F '\t' '{print $1}' |\
@@ -122,6 +139,15 @@ elif [ $clear_punctuation ]; then
     cat ${data} | \
         awk -F '\t' '{print $2}' | \
         ${DIR}/clear_punctuation.py > ${data_name}.L2.txt
+
+    if [ ${test_data} ]; then
+        cat ${test_data} |\
+            awk -F '\t' '{print $1}' |\
+            ${DIR}/clear_punctuation.py > ${data_name}.L1.test.txt
+        cat ${test_data} | \
+            awk -F '\t' '{print $2}' | \
+            ${DIR}/clear_punctuation.py > ${data_name}.L2.test.txt
+    fi
 elif [ $lowercase ]; then
     cat ${data} |\
         awk -F '\t' '{print $1}' |\
@@ -129,6 +155,22 @@ elif [ $lowercase ]; then
     cat ${data} | \
         awk -F '\t' '{print $2}' | \
         ${DIR}/lowercase.py > ${data_name}.L2.txt
+
+    if [ ${test_data} ]; then
+        cat ${test_data} |\
+            awk -F '\t' '{print $1}' |\
+            ${DIR}/lowercase.py > ${data_name}.L1.test.txt
+        cat ${test_data} | \
+            awk -F '\t' '{print $2}' | \
+            ${DIR}/lowercase.py > ${data_name}.L2.test.txt
+    fi
+
+    if [ ${test_data} ]; then
+        cat ${test_data} |\
+            awk -F '\t' '{print $1}' > ${data_name}.L1.test.txt
+        cat ${test_data} | \
+            awk -F '\t' '{print $2}' > ${data_name}.L2.test.txt
+    fi
 else
     cat ${data} |\
         awk -F '\t' '{print $1}' > ${data_name}.L1.txt
@@ -137,6 +179,31 @@ else
 fi
 
 cat ${data} | awk -F '\t' '{print $3}' > ${data_name}.labels.txt
+
+if [ ${test_data} ]; then
+    cat ${test_data} | awk -F '\t' '{print $3}' > ${data_name}.labels.test.txt
+fi
+
+if [ -z ${test_data} ]; then
+    cat ${data_name}.L1.txt | \
+        ${DIR}/train_test_split_stream.py --test_ratio ${test_ratio} --seed ${seed}
+    mv train.txt ${data_name}.L1.train.txt
+    mv test.txt ${data_name}.L1.test.txt
+
+    cat ${data_name}.L2.txt | \
+        ${DIR}/train_test_split_stream.py --test_ratio ${test_ratio} --seed ${seed}
+    mv train.txt ${data_name}.L2.train.txt
+    mv test.txt ${data_name}.L2.test.txt
+
+    cat ${data_name}.labels.txt | \
+        ${DIR}/train_test_split_stream.py --test_ratio ${test_ratio} --seed ${seed}
+    mv train.txt ${data_dir}/labels.train.txt
+    mv test.txt ${data_dir}/labels.test.txt
+else
+    mv ${data_name}.L1.txt ${data_name}.L1.train.txt
+    mv ${data_name}.L2.txt ${data_name}.L2.train.txt
+    mv ${data_name}.labels.txt ${data_name}.labels.train.txt
+fi
 
 if [ "$level" == "bpe" ];  then
     ${DIR}/learn_joint_bpe_and_vocab.py \

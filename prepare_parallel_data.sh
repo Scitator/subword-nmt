@@ -178,19 +178,19 @@ else
     fi
 fi
 
-if [-z ${test_data} ]; then
+if [ -z ${test_data} ]; then
     cat ${data_name}.L1.txt | \
         ${DIR}/train_test_split_stream.py --test_ratio ${test_ratio} --seed ${seed}
-    mv train.txt ${data_name}.L1.train.txt
-    mv test.txt ${data_name}.L1.test.txt
+    cp train.txt ${data_name}.L1.train.txt
+    cp test.txt ${data_name}.L1.test.txt
 
     cat ${data_name}.L2.txt | \
         ${DIR}/train_test_split_stream.py --test_ratio ${test_ratio} --seed ${seed}
-    mv train.txt ${data_name}.L2.train.txt
-    mv test.txt ${data_name}.L2.test.txt
+    cp train.txt ${data_name}.L2.train.txt
+    cp test.txt ${data_name}.L2.test.txt
 else
-    mv ${data_name}.L1.txt ${data_name}.L1.train.txt
-    mv ${data_name}.L2.txt ${data_name}.L2.train.txt
+    cp ${data_name}.L1.txt ${data_name}.L1.train.txt
+    cp ${data_name}.L2.txt ${data_name}.L2.train.txt
 fi
 
 
@@ -247,10 +247,10 @@ elif [ "$level" == "char" ];  then
         tmp_var=$'_#_\t1'
         sed -i "1s/.*/$tmp_var/" ${data_dir}/vocab.txt
     else
-        mv ${data_name}.L1.train.txt ${data_dir}/train_sources.txt
-        mv ${data_name}.L2.train.txt ${data_dir}/train_targets.txt
-        mv ${data_name}.L1.test.txt ${data_dir}/test_sources.txt
-        mv ${data_name}.L2.test.txt ${data_dir}/test_targets.txt
+        cp ${data_name}.L1.train.txt ${data_dir}/train_sources.txt
+        cp ${data_name}.L2.train.txt ${data_dir}/train_targets.txt
+        cp ${data_name}.L1.test.txt ${data_dir}/test_sources.txt
+        cp ${data_name}.L2.test.txt ${data_dir}/test_targets.txt
     fi
 elif [ "$level" == "word" ];  then
     cat ${data_name}.L1.train.txt ${data_name}.L2.train.txt |\
@@ -258,10 +258,10 @@ elif [ "$level" == "word" ];  then
             --delimiter ' ' \
             --min_frequency ${vocab_min_freq} \
             --max_vocab_size ${vocab_max_size} >  ${data_dir}/vocab.txt
-    mv ${data_name}.L1.train.txt ${data_dir}/train_sources.txt
-    mv ${data_name}.L2.train.txt ${data_dir}/train_targets.txt
-    mv ${data_name}.L1.test.txt ${data_dir}/test_sources.txt
-    mv ${data_name}.L2.test.txt ${data_dir}/test_targets.txt
+    cp ${data_name}.L1.train.txt ${data_dir}/train_sources.txt
+    cp ${data_name}.L2.train.txt ${data_dir}/train_targets.txt
+    cp ${data_name}.L1.test.txt ${data_dir}/test_sources.txt
+    cp ${data_name}.L2.test.txt ${data_dir}/test_targets.txt
 else
     exit 1
 fi
