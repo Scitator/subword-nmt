@@ -181,13 +181,13 @@ fi
 if [ -z ${test_data} ]; then
     cat ${data_name}.L1.txt | \
         ${DIR}/train_test_split_stream.py --test_ratio ${test_ratio} --seed ${seed}
-    cp train.txt ${data_name}.L1.train.txt
-    cp test.txt ${data_name}.L1.test.txt
+    mv train.txt ${data_name}.L1.train.txt
+    mv test.txt ${data_name}.L1.test.txt
 
     cat ${data_name}.L2.txt | \
         ${DIR}/train_test_split_stream.py --test_ratio ${test_ratio} --seed ${seed}
-    cp train.txt ${data_name}.L2.train.txt
-    cp test.txt ${data_name}.L2.test.txt
+    mv train.txt ${data_name}.L2.train.txt
+    mv test.txt ${data_name}.L2.test.txt
 else
     cp ${data_name}.L1.txt ${data_name}.L1.train.txt
     cp ${data_name}.L2.txt ${data_name}.L2.train.txt
